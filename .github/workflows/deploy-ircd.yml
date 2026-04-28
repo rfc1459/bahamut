@@ -1,0 +1,76 @@
+name: Deploy Bahamut
+
+on:
+  workflow_dispatch:
+    inputs:
+      install_path:
+        description: 'Final install path (e.g. /home/user/ircd)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch (default: master)'
+        required: false
+        default: 'master'
+        type: string
+      server_ip:
+        description: 'Target server IP'
+        required: true
+        type: string
+      mode:
+        description: 'Server role'
+        required: true
+        type: choice
+        options:
+          - leaf
+          - hub
+      ipv6:
+        description: 'Enable IPv6'
+        required: true
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    env:
+      TARGET_IP: ${{ inputs.server_ip }}
+      INSTALL_PATH: ${{ inputs.install_path }}
+      BRANCH: ${{ inputs.branch }}
+      MODE: ${{ inputs.mode }}
+      IPV6: ${{ inputs.ipv6 }}
+    steps:
+      - name: Deploy bahamut to ${{ inputs.server_ip }}
+        run: |
+          ssh -o StrictHostKeyChecking=no azzurra@${TARGET_IP} bash << REMOTE_EOF
+          set -euo pipefail
+
+          DATE=\$(date +%Y%m%d_%H%M%S)
+          BUILD_DIR=/home/azzurra/bahamut.git
+
+          if [ -d "\$BUILD_DIR" ]; then
+            mv "\$BUILD_DIR" "\${BUILD_DIR}.old-\${DATE}"
+          fi
+
+          git clone https://github.com/azzurra/bahamut "\$BUILD_DIR"
+          cd "\$BUILD_DIR"
+          git checkout "${BRANCH}"
+
+          ./configure
+
+          sed -i "s|/home/azzurra/bahamut.git/|${INSTALL_PATH}/|g" include/options.h
+          sed -i 's/#undef USE_SSL/#define USE_SSL/g' include/options.h
+
+          if [ "${MODE}" = "hub" ]; then
+            sed -i 's/#undef HUB/#define HUB/g' include/options.h
+          fi
+
+          if [ "${IPV6}" = "yes" ]; then
+            sed -i 's/#undef INET6/#define INET6/g' include/options.h
+            sed -i "s/#define IRCDCONF_DELIMITER ':'/#define IRCDCONF_DELIMITER '|'/g" include/options.h
+          fi
+
+          make
+          make install
+          REMOTE_EOF
