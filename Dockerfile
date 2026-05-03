@@ -3,9 +3,11 @@ FROM debian:trixie
 RUN apt-get update && apt-get install -y --no-install-recommends \
         autoconf \
         build-essential \
+        pkg-config \
         libssl-dev \
         zlib1g-dev \
         libcrypt-dev \
+        libc-ares-dev \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 

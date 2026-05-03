@@ -23,9 +23,11 @@ jobs:
           apt-get install -y --no-install-recommends \
             autoconf \
             build-essential \
+            pkg-config \
             libssl-dev \
             zlib1g-dev \
             libcrypt-dev \
+            libc-ares-dev \
             ca-certificates \
             git
 

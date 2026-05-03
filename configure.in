@@ -320,6 +320,14 @@ fi
 
 dnl ---------- end of zlib checks
 
+dnl ---------- check for c-ares (asynchronous DNS resolver)
+
+PKG_CHECK_MODULES([CARES], [libcares >= 1.16])
+CFLAGS="$CFLAGS $CARES_CFLAGS"
+LIBS="$LIBS $CARES_LIBS"
+
+dnl ---------- end of c-ares checks
+
 if test $enable_encryption = no; then
 echo "encryption disabled, skipping openssl checks..."
 ENCRYPT_SRC=""
