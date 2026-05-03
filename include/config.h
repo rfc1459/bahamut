@@ -297,19 +297,6 @@
 #include "defs.h"
 
 /*
- * USE_FAST_FD_ISSET - experimental! - crawl inside of FD_ISSET macro
- * This one is experimental, though it works on SUNOS and freebsd It is
- * NOT portable, and "crawls" carnally inside the FD_ISSET macro but
- * should be a faster way of doing select() in s_bsd.c
- * 
- * The idea is to pre-calculate the bit map mask needed shifting it over
- * as needed, the FD_ISSET calculates the bitmask and array offset
- * every single time.
- */
-/* Checked for by configure now. */
-/* #define USE_FAST_FD_ISSET */
-
-/*
  * TS_MAX_DELTA and TS_WARN_DELTA -  allowed delta for TS when another
  * server connects.
  * 

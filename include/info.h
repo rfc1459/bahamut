@@ -220,12 +220,6 @@
 #define USERNAMES_IN_TRACE_VAL 0
 #endif
 
-#ifdef USE_FAST_FD_ISSET
-#define USE_FAST_FD_ISSET_VAL 1
-#else
-#define USE_FAST_FD_ISSET_VAL 0
-#endif
-
 #ifdef USE_SYSLOG
 #define USE_SYSLOG_VAL 1
 #else

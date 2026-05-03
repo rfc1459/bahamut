@@ -33,11 +33,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#ifdef _FD_SETSIZE
-#undef FD_SETSIZE
-#define FD_SETSIZE _FD_SETSIZE
-#endif
-
 #include <netinet/in.h>
 #include <netdb.h>
 #if defined( HAVE_STDDEF_H )

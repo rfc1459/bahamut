@@ -68,9 +68,9 @@
 
 #if defined( BSD_RELIABLE_SIGNALS ) \
     && (defined( SYSV_UNRELIABLE_SIGNALS ) || defined( POSIX_SIGNALS ))
-error You defined too many signal types in setup.h
+#error You defined too many signal types in setup.h
 #elif defined( SYSV_UNRELIABLE_SIGNALS ) && defined( POSIX_SIGNALS )
-error You defined too many signal types in setup.h
+#error You defined too many signal types in setup.h
 #endif
 
 #if defined( BSD_RELIABLE_SIGNALS ) || defined( POSIX_SIGNALS )
@@ -79,6 +79,8 @@ error You defined too many signal types in setup.h
 
 #ifdef HAVE_POLL
 #define USE_POLL 1
+#else
+#error Your platform does not support poll (how did you even get here?!?)
 #endif
 
 #endif				/* DEFS_H_INCLUDED */

@@ -21,20 +21,12 @@ RM=@RM@
 
 # Any extra compile options here:
 XFLAGS=
-# file descriptor size limit
-FDLIMIT=@DFDSS@
 # openssl related flags.
 SSLFLAGS=
 # Default CFLAGS
-CFLAGS= -fgnu89-inline -fcommon -O2 ${FDLIMIT} ${XFLAGS} ${SSLFLAGS}
+CFLAGS= -fgnu89-inline -fcommon -O2 ${XFLAGS} ${SSLFLAGS}
 # linker flags.
 LDFLAGS=
-#
-# What I used on FreeBSD 2.1.7 with kernel compiled for 4096 descriptors
-# the -D"FD_SETSIZE=4096" is only needed if sys/types.h has not been updated
-# to match the kernel config --JRL
-#CFLAGS= -g -D"FD_SETSIZE=4096" -O2
-#
 
 SHELL=/bin/sh
 SUBDIRS=src tools

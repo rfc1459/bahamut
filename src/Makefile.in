@@ -137,7 +137,7 @@ s_auth.o: s_auth.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/hash.h \
  ../include/class.h ../include/dbuf.h ../include/common.h \
  ../include/sys.h ../include/res.h ../include/numeric.h \
- ../include/patchlevel.h ../include/sock.h ../include/h.h \
+ ../include/patchlevel.h ../include/h.h \
  ../include/dich_conf.h ../include/fdlist.h \
  ../include/patchlevel.h ../include/options.h
 s_bsd.o: s_bsd.c ../include/struct.h ../include/config.h \

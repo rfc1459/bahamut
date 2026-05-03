@@ -33,8 +33,6 @@
 #include "inet.h"
 #endif
 #include <fcntl.h>
-#include "sock.h"    /* If FD_ZERO isn't define up to this point */
-/* define it (BSD4.2 needs this) */
 #include "h.h"
 #include "fdlist.h"
 
