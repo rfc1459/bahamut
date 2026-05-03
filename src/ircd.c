@@ -1268,7 +1268,7 @@ void io_loop()
 	/* DNS checks. One to timeout queries, one for cache expiries.*/
 
 	if (timeofday >= nextdnscheck)
-	    nextdnscheck = timeout_query_list(timeofday);
+	    nextdnscheck = resolver_next_timeout(timeofday);
 	if (timeofday >= nextexpire)
 	    nextexpire = expire_cache(timeofday);
 

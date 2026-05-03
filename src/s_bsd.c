@@ -525,7 +525,7 @@ void init_sys()
     if (bootopt & BOOT_TTY)
     {
 	/* debugging is going to a tty */
-	resfd = init_resolver(0x1f);
+	resfd = init_resolver();
 	return;
     }
     (void) close(1);
@@ -561,7 +561,7 @@ void init_sys()
 	local[0] = NULL;
     }
 
-    resfd = init_resolver(0x1f);
+    resfd = init_resolver();
     return;
 }
 

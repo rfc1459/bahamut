@@ -288,12 +288,17 @@ extern int  	  get_client_class(aClient *);
 extern int 	  get_conf_class(aConfItem *);
 extern void 	  report_classes(aClient *);
 
+struct pollfd;
 extern struct hostent *get_res(char *);
 extern struct hostent *gethost_byaddr(char *, Link *);
 extern struct hostent *gethost_byname(char *, Link *);
 extern void 	  flush_cache(void);
-extern int  	  init_resolver(int);
-extern time_t 	  timeout_query_list(time_t);
+extern int  	  init_resolver(void);
+extern void 	  shutdown_resolver(void);
+extern void 	  resolver_reinit(void);
+extern int  	  resolver_collect_pfds(struct pollfd *);
+extern void 	  resolver_process(int, int, int);
+extern time_t 	  resolver_next_timeout(time_t);
 extern time_t 	  expire_cache(time_t);
 extern void 	  del_queries(char *);
 

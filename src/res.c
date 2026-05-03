@@ -66,6 +66,42 @@ extern int  errno, h_errno;
 extern int  highest_fd;
 extern aClient *local[];
 
+/*
+ * Internal-only DNS bookkeeping types and constants. These used to live in
+ * res.h but were moved here as part of the c-ares migration: nothing outside
+ * this file looks at the in-flight request list or the hash-table buckets,
+ * so the public header no longer needs to carry them.
+ */
+#define MAXPACKET       1024
+#define ARES_CACSIZE    307
+
+typedef struct reslist
+{
+    int         id;
+    int         sent;			/* number of requests sent */
+    int         srch;
+    time_t      ttl;
+    char        type;
+    char        retries;		/* retry counter */
+    char        sends;			/* number of sends (>1 means resent) */
+    char        resend;			/* send flag. 0 == dont resend */
+    time_t      sentat;
+    time_t      timeout;
+    struct IN_ADDR addr;
+    char       *name;
+    struct reslist *next;
+    Link        cinfo;
+    struct hent he;
+    int         has_rev;                /* is he_rev valid? */
+    struct hent he_rev;
+} ResRQ;
+
+typedef struct cachetable
+{
+    aCache     *num_list;
+    aCache     *name_list;
+} CacheTable;
+
 static char hostbuf[RESHOSTLEN + 1];
 static int  incache = 0;
 static CacheTable hashtable[ARES_CACSIZE];
@@ -118,48 +154,34 @@ static struct resinfo
     int         re_unkrep;
 } reinfo;
 
-int init_resolver(int op)
+int init_resolver(void)
 {
-    int         ret = 0;
-    
+    int         on = 0;
+
 #ifdef	LRAND48
     srand48(timeofday);
 #endif
-    if (op & RES_INITLIST)
+    memset((char *) &reinfo, '\0', sizeof(reinfo));
+    first = last = NULL;
+
+    if (res_init() == 0 && !_res.nscount)
     {
-	memset((char *) &reinfo, '\0', sizeof(reinfo));
-	first = last = NULL;
+	_res.nscount = 1;
+	_res.nsaddr_list[0].sin_addr.s_addr = inet_addr("127.0.0.1");
     }
-    if (op & RES_CALLINIT)
-    {
-	ret = res_init();
-	if (!_res.nscount)
-	{
-	    _res.nscount = 1;
-	    _res.nsaddr_list[0].sin_addr.s_addr = inet_addr("127.0.0.1");
-	}
-    }
-    
-    if (op & RES_INITSOCK)
-    {
-	int         on = 0;
-	
-	ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
-	(void) setsockopt(ret, SOL_SOCKET, SO_BROADCAST,
-			  (char *) &on, sizeof(on));
-    }
+
+    resfd = socket(AF_INET, SOCK_DGRAM, 0);
+    (void) setsockopt(resfd, SOL_SOCKET, SO_BROADCAST,
+		      (char *) &on, sizeof(on));
+
 #ifdef DEBUG
-    if (op & RES_INITDEBG);
     _res.options |= RES_DEBUG;
 #endif
-    if (op & RES_INITCACH)
-    {
-	memset((char *) &cainfo, '\0', sizeof(cainfo));
-	memset((char *) hashtable, '\0', sizeof(hashtable));
-    }
-    if (op == 0)
-	ret = resfd;
-    return ret;
+
+    memset((char *) &cainfo, '\0', sizeof(cainfo));
+    memset((char *) hashtable, '\0', sizeof(hashtable));
+
+    return resfd;
 }
 
 static int add_request(ResRQ * new)
@@ -251,13 +273,13 @@ static ResRQ *make_request(Link *lp)
  * Remove queries from the list which have been there too long without
  * being resolved.
  */
-time_t timeout_query_list(time_t now)
+time_t resolver_next_timeout(time_t now)
 {
     ResRQ  *rptr, *r2ptr;
     time_t  next = 0, tout;
     aClient    *cptr;
 
-    Debug((DEBUG_DNS, "timeout_query_list at %s", myctime(now)));
+    Debug((DEBUG_DNS, "resolver_next_timeout at %s", myctime(now)));
     for (rptr = first; rptr; rptr = r2ptr)
     {
 	r2ptr = rptr->next;
