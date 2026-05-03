@@ -1195,10 +1195,7 @@ int init_resolver(void)
     capture_search_domain();
     resolver_initialized = 1;
 
-    /* No single fd to expose any more — the I/O loop drives c-ares via
-     * resolver_collect_pfds + resolver_process. resfd stays -1 in s_bsd.c so
-     * the legacy do_dns_async path never fires. */
-    return -1;
+    return 0;
 }
 
 void shutdown_resolver(void)
@@ -1239,23 +1236,6 @@ void resolver_reinit(void)
         return;
     (void) ares_reinit(resolver_channel);
     capture_search_domain();
-}
-
-
-/* --------------------------------------------------------------------------
- * get_res — legacy stub.
- *
- * The c-ares-based resolver delivers replies via the on_addrinfo /
- * on_nameinfo callbacks. The legacy do_dns_async path in s_bsd.c only fires
- * when resfd >= 0, but init_resolver now returns -1 unconditionally — so
- * this stub is unreachable. It is retained for the duration of Step 3
- * because s_bsd.c::do_dns_async still references it; both go away in Step 4.
- * -------------------------------------------------------------------------- */
-
-struct hostent *get_res(char *lp)
-{
-    (void) lp;
-    return NULL;
 }
 
 

@@ -79,14 +79,14 @@ void reset_sock_opts(int, int);
 #endif
 
 aClient *local[MAXCONNECTIONS];
-int highest_fd = 0, resfd = -1;
+int highest_fd = 0;
 time_t timeofday;
 static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet(aConfItem *, aClient *, int *);
 static int completed_connection(aClient *);
 static int check_init(aClient *, char *);
-static void do_dns_async(void), set_sock_opts(int, aClient *);
+static void set_sock_opts(int, aClient *);
 struct SOCKADDR_IN vserv;
 char specific_virtual_host;
 
@@ -498,7 +498,7 @@ void init_sys()
     if (bootopt & BOOT_TTY)
     {
 	/* debugging is going to a tty */
-	resfd = init_resolver();
+	(void) init_resolver();
 	return;
     }
     (void) close(1);
@@ -534,7 +534,7 @@ void init_sys()
 	local[0] = NULL;
     }
 
-    resfd = init_resolver();
+    (void) init_resolver();
     return;
 }
 
@@ -1896,8 +1896,8 @@ int read_message(time_t delay, fdlist * listp)
     int nfds;
     static struct pollfd poll_fdarray[MAXCONNECTIONS];
     struct pollfd *pfd = poll_fdarray;
-    struct pollfd *res_pfd = NULL;
     int nbr_pfds = 0;
+    int first_resfd_slot = 0, n_resfds = 0;
     u_long waittime;
     time_t delay2 = delay;
     int res, length, fd;
@@ -1918,7 +1918,8 @@ int read_message(time_t delay, fdlist * listp)
 	nbr_pfds = 0;
 	pfd = poll_fdarray;
 	pfd->fd = -1;
-	res_pfd = NULL;
+	first_resfd_slot = 0;
+	n_resfds = 0;
 	auth = 0;
 	
 	for (i = listp->entry[j = 1]; j <= listp->last_entry;
@@ -1989,11 +1990,9 @@ int read_message(time_t delay, fdlist * listp)
 		PFD_SETW(i);
 	}
 	
-	if (resfd >= 0) 
-	{
-	    PFD_SETR(resfd);
-	    res_pfd = pfd;
-	}
+	first_resfd_slot = nbr_pfds;
+	n_resfds = resolver_collect_pfds(poll_fdarray + nbr_pfds);
+	nbr_pfds += n_resfds;
 
 	waittime = MIN(delay2, delay) * 1000;
 	nfds = poll(poll_fdarray, nbr_pfds, waittime);
@@ -2008,18 +2007,22 @@ int read_message(time_t delay, fdlist * listp)
 	sleep(10);
     }
     
-    if (res_pfd && (res_pfd->revents & (POLLREADFLAGS | POLLERRORS))) 
+    for (i = first_resfd_slot; i < first_resfd_slot + n_resfds; i++)
     {
-	do_dns_async();
-	nfds--;
+	struct pollfd *rpfd = &poll_fdarray[i];
+
+	if (nfds && rpfd->revents)
+	{
+	    nfds--;
+	    resolver_process(rpfd->fd,
+			     rpfd->revents & (POLLREADFLAGS | POLLERRORS),
+			     rpfd->revents & POLLWRITEFLAGS);
+	}
     }
-    
-    for (pfd = poll_fdarray, i = 0; i < nbr_pfds; i++, pfd++) 
+
+    for (pfd = poll_fdarray, i = 0; i < first_resfd_slot; i++, pfd++)
     {
         fd = pfd->fd;
-
-        if (pfd == res_pfd)
-           continue;
 
         if (nfds && pfd->revents)
         {
@@ -2431,73 +2434,3 @@ void get_my_name(aClient * cptr, char *name, int len)
     return;
 }
 
-/*
- * do_dns_async
- *
- * Called when the fd returned from init_resolver() has been selected for
- * reading.
- */
-static void do_dns_async()
-{
-    static Link ln;
-    aClient *cptr;
-    aConfItem *aconf;
-    struct hostent *hp;
-    int bytes, packets = 0;
-
-    do
-    {
-	ln.flags = -1;
-	hp = get_res((char *) &ln);
-	Debug((DEBUG_DNS, "%#x = get_res(%d,%#x)",
-	       hp, ln.flags, ln.value.cptr));
-
-	switch (ln.flags)
-	{
-	case ASYNC_NONE:
-	    /* 
-	     * no reply was processed that was outstanding or had
-	     * a client still waiting.
-	     */
-	    break;
-	case ASYNC_CLIENT:
-	    if ((cptr = ln.value.cptr))
-	    {
-		del_queries((char *) cptr);
-
-		ClearDNS(cptr);
-		cptr->hostp = hp;
-		if (!DoingAuth(cptr))
-		    SetAccess(cptr);
-	    }
-	    break;
-	case ASYNC_CONNECT:
-	    aconf = ln.value.aconf;
-	    if (hp && aconf)
-	    {
-		memcpy((char *) &aconf->ipnum, hp->h_addr,
-	       
-		       sizeof(struct IN_ADDR));
-		
-		(void) connect_server(aconf, NULL, hp);
-	    } 
-	    else
-		sendto_ops("Connect to %s failed: host lookup",
-			   (aconf) ? aconf->host : "unknown");
-	    break;
-	case ASYNC_CONF:
-	    aconf = ln.value.aconf;
-	    if (hp && aconf)
-		memcpy((char *) &aconf->ipnum, hp->h_addr,
-		       sizeof(struct IN_ADDR));
-
-	    break;
-	default:
-	    break;
-	}
-	if (ioctl(resfd, FIONREAD, &bytes) == -1)
-	    bytes = 0;
-	packets++;
-    }
-    while ((bytes > 0) && (packets < 10));
-}
