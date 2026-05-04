@@ -46,9 +46,6 @@
 #include <poll.h>
 #endif /* USE_POLL */
 
-#include "nameser.h"
-#include "resolv.h"
-
 #ifdef USE_SSL
 #include "ssl.h"
 #endif

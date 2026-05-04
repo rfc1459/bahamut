@@ -29,8 +29,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "nameser.h"
-#include "resolv.h"
 #include "dh.h"
 #include "zlink.h"
 #include "info.h"
@@ -4877,7 +4875,7 @@ int m_rehash(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], sptr->user->username, sptr->user->host);
 	    sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], "DNS");
 	    flush_cache();		/* flush the dns cache */
-	    res_init();		/* re-read /etc/resolv.conf */
+	    resolver_reinit();		/* re-read /etc/resolv.conf */
 	    sendto_ops("%s is rehashing DNS while whistling innocently",
 		       parv[0]);
 	    return 0;

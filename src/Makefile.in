@@ -77,7 +77,7 @@ hash.o: hash.c ../include/struct.h ../include/config.h \
 inet_addr.o: inet_addr.c ../include/setup.h ../include/struct.h \
  ../include/config.h ../include/defs.h ../include/hash.h \
  ../include/class.h ../include/dbuf.h ../include/common.h \
- ../include/sys.h ../include/nameser.h ../include/resolv.h \
+ ../include/sys.h \
  ../include/patchlevel.h ../include/options.h
 ircd.o: ircd.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/hash.h \
@@ -131,8 +131,8 @@ res.o: res.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/hash.h \
  ../include/class.h ../include/dbuf.h ../include/common.h \
  ../include/sys.h ../include/res.h ../include/numeric.h ../include/h.h \
- ../include/dich_conf.h ../include/fdlist.h ../include/nameser.h \
- ../include/resolv.h ../include/patchlevel.h ../include/options.h
+ ../include/dich_conf.h ../include/fdlist.h \
+ ../include/patchlevel.h ../include/options.h
 s_auth.o: s_auth.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/hash.h \
  ../include/class.h ../include/dbuf.h ../include/common.h \
@@ -144,8 +144,8 @@ s_bsd.o: s_bsd.c ../include/struct.h ../include/config.h \
  ../include/setup.h ../include/defs.h ../include/hash.h \
  ../include/class.h ../include/dbuf.h ../include/common.h \
  ../include/sys.h ../include/res.h ../include/numeric.h \
- ../include/patchlevel.h ../include/inet.h ../include/nameser.h \
- ../include/resolv.h ../include/h.h ../include/dich_conf.h \
+ ../include/patchlevel.h ../include/inet.h \
+ ../include/h.h ../include/dich_conf.h \
  ../include/fdlist.h ../include/patchlevel.h ../include/options.h \
  ../include/ssl.h
 s_conf.o: s_conf.c ../include/struct.h ../include/config.h \

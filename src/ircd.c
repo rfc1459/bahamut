@@ -208,6 +208,8 @@ VOIDSIG s_die()
     activity_close();
 #endif
 
+    shutdown_resolver();
+
     exit(0);
 }
 
@@ -285,6 +287,11 @@ void server_reboot()
 	
     Debug((DEBUG_NOTICE, "Restarting server..."));
     dump_connections(me.fd);
+
+    /* Tear the c-ares channel down before the blanket fd close below claims
+     * its sockets out from under it. */
+    shutdown_resolver();
+
     /*
      * fd 0 must be 'preserved' if the -x option has
      * been passed to us before restarting.

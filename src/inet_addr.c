@@ -56,8 +56,6 @@
 #include "common.h"
 #include "sys.h"
 #include <netinet/in.h>
-#include "nameser.h"
-#include "resolv.h"
 
 #ifndef	INADDR_NONE
 #define	INADDR_NONE	((u_long)0xffffffff)
